@@ -1,5 +1,5 @@
 param (
-    [string]$dllPath = "C:\MK\ZenskarApp1\Zenskar_MAMS.dll",
+    [string]$dllPath,
     [string]$repoOwner = "SandeepGunaMK",
     [string]$repoName = "ZenskarApp",
     [string]$branch = "main",
