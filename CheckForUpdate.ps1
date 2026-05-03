@@ -1,55 +1,26 @@
 param (
-    [string]$dllPath,
-    [string]$repoOwner = "SandeepGunaMK",
-    [string]$repoName = "ZenskarApp",
-    [string]$branch = "main",
-    [string]$token = ""  # optional (only if private repo)
+    [string]$localVersion
 )
 
-Write-Host "Checking for updates..."
-
-# 🔹 Validate DLL
-if (!(Test-Path $dllPath)) {
-    Write-Host "ERROR: DLL not found"
-    exit 1
-}
-
-# 🔹 Get local modified date
-$localDate = (Get-Item $dllPath).LastWriteTimeUtc
-Write-Host "Local DLL Date (UTC): $localDate"
-
-# 🔹 Build GitHub API URL
-$apiUrl = "https://api.github.com/repos/$repoOwner/$repoName/commits/$branch"
-
-# 🔹 Headers (token optional)
-$headers = @{
-    "User-Agent" = "WPF-Updater"
-}
-
-if ($token -ne "") {
-    $headers["Authorization"] = "Bearer $token"
-}
+$versionUrl = "https://raw.githubusercontent.com/SandeepGunaMK/ZenskarApp/main/version.txt"
 
 try {
-    $response = Invoke-RestMethod -Uri $apiUrl -Headers $headers -Method Get
-}
-catch {
-    Write-Host "ERROR: Failed to fetch commit info"
-    Write-Host $_
+    $remoteVersion = Invoke-RestMethod -Uri $versionUrl
+} catch {
+    Write-Host "FAILED"
     exit 1
 }
 
-# 🔹 Extract commit date
-$commitDate = [datetime]$response.commit.committer.date
-Write-Host "Latest Commit Date (UTC): $commitDate"
+$remoteVersion = $remoteVersion.Trim()
 
-# 🔹 Compare
-if ($commitDate -gt $localDate) {
+Write-Host "Local: $localVersion"
+Write-Host "Remote: $remoteVersion"
+
+if ([version]$remoteVersion -gt [version]$localVersion) {
     Write-Host "UPDATE AVAILABLE"
+    exit 2
 }
 else {
     Write-Host "UP TO DATE"
+    exit 0
 }
-
-# Optional: pause for debugging
-# Read-Host "Press Enter to exit"
